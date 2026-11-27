@@ -1,0 +1,13 @@
+{
+  "projectId": "73224800",
+  "functions": {
+    "ai-assistant": {
+      "hasChanged": false,
+      "hash": "1d6bcaef912c3d8cdb819b9826d5e792dd66cd6bbfd6b4622bf305e4671e6c17"
+    },
+    "ai-keys-mgmt": {
+      "hasChanged": false,
+      "hash": "a70b98c316ea22182b6ddfe52319f0bc6fe3e9a2b6e20c823679f975baf77332"
+    }
+  }
+}

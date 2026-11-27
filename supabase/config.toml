@@ -1,0 +1,5 @@
+[functions.ai-assistant]
+verify_jwt = false
+
+[functions.ai-keys-mgmt]
+verify_jwt = false
