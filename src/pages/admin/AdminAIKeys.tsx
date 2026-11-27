@@ -26,18 +26,25 @@ function endpoint() {
   return `${url}/functions/v1/ai-keys-mgmt`;
 }
 
+function authHeaders(): Record<string, string> {
+  const secret = sessionStorage.getItem('admin_secret') || '';
+  return { 'x-admin-secret': secret };
+}
+
 export function AdminAIKeys() {
   const [keys, setKeys] = useState<AIKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [needSecret, setNeedSecret] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(endpoint());
+      const resp = await fetch(endpoint(), { headers: authHeaders() });
+      if (resp.status === 401) { setNeedSecret(true); return; }
       if (!resp.ok) throw new Error('فشل تحميل المفاتيح');
       setKeys(await resp.json());
     } catch (e) {
@@ -54,7 +61,7 @@ export function AdminAIKeys() {
     try {
       await fetch(`${endpoint()}/${k.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ is_active: !k.is_active }),
       });
       setKeys((prev) => prev.map((x) => x.id === k.id ? { ...x, is_active: !x.is_active } : x));
@@ -67,7 +74,7 @@ export function AdminAIKeys() {
     if (!confirm(`حذف مفتاح "${k.label || k.provider}"؟`)) return;
     setSaving(true);
     try {
-      await fetch(`${endpoint()}/${k.id}`, { method: 'DELETE' });
+      await fetch(`${endpoint()}/${k.id}`, { method: 'DELETE', headers: authHeaders() });
       setKeys((prev) => prev.filter((x) => x.id !== k.id));
     } finally {
       setSaving(false);
@@ -99,6 +106,10 @@ export function AdminAIKeys() {
           إضافة مفتاح
         </button>
       </div>
+
+      {needSecret && (
+        <SecretGate onUnlock={() => { setNeedSecret(false); load(); }} />
+      )}
 
       {/* Security notice */}
       <div className="mb-6 p-4 rounded-2xl bg-primary-50 border border-primary-200 flex items-start gap-3">
@@ -196,6 +207,43 @@ export function AdminAIKeys() {
   );
 }
 
+function SecretGate({ onUnlock }: { onUnlock: () => void }) {
+  const [value, setValue] = useState('');
+  return (
+    <div className="mb-6 bg-white rounded-2xl border border-neutral-200 p-6 max-w-md mx-auto">
+      <div className="flex items-center gap-2 mb-3">
+        <Shield className="w-5 h-5 text-primary-700" />
+        <h3 className="font-bold text-neutral-900">هذه الصفحة محمية</h3>
+      </div>
+      <p className="text-sm text-neutral-500 mb-4">أدخل رمز المسؤول للوصول إلى إدارة المفاتيح.</p>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          sessionStorage.setItem('admin_secret', value);
+          onUnlock();
+        }}
+        className="flex gap-2"
+      >
+        <input
+          type="password"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="رمز المسؤول"
+          dir="ltr"
+          className="flex-1 h-10 px-3 rounded-xl border border-neutral-200 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 text-sm font-mono"
+        />
+        <button
+          type="submit"
+          disabled={!value}
+          className="px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition disabled:opacity-40"
+        >
+          فتح
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function AddKeyForm({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [provider, setProvider] = useState('groq');
   const [keyValue, setKeyValue] = useState('');
@@ -213,7 +261,7 @@ function AddKeyForm({ onClose, onAdded }: { onClose: () => void; onAdded: () => 
     try {
       const resp = await fetch(endpoint(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           provider,
           key_value: keyValue.trim(),

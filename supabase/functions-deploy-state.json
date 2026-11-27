@@ -1,5 +1,5 @@
 {
-  "projectId": "73224800",
+  "projectId": "73267041",
   "functions": {
     "ai-assistant": {
       "hasChanged": false,
@@ -7,7 +7,7 @@
     },
     "ai-keys-mgmt": {
       "hasChanged": false,
-      "hash": "a70b98c316ea22182b6ddfe52319f0bc6fe3e9a2b6e20c823679f975baf77332"
+      "hash": "3edaa2f48ea43e091280acedba0a3a9fe833230a9fbf26a5212cddce32ae19a2"
     }
   }
 }

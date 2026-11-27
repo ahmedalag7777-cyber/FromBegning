@@ -17,6 +17,33 @@ interface KeyRow {
   created_at: string;
 }
 
+let cachedAdminSecret: { value: string; at: number } | null = null;
+
+async function getAdminSecret(): Promise<string> {
+  if (cachedAdminSecret && Date.now() - cachedAdminSecret.at < 60_000) {
+    return cachedAdminSecret.value;
+  }
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/app_secrets?name=eq.admin_api_secret&select=value`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!resp.ok) return "";
+  const rows = await resp.json();
+  const value = ((rows as { value: string }[])[0]?.value) || "";
+  cachedAdminSecret = { value, at: Date.now() };
+  return value;
+}
+
+async function isAdmin(req: Request): Promise<boolean> {
+  const expected = await getAdminSecret();
+  if (!expected) return false;
+  const provided = req.headers.get("x-admin-secret") || "";
+  if (provided.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  return diff === 0;
+}
+
 function maskKey(key: string): string {
   if (key.length <= 12) return "****";
   return key.slice(0, 6) + "****" + key.slice(-4);
@@ -49,6 +76,10 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/functions\/v1\/ai-keys-mgmt\/?/, "");
     const segments = path.split("/").filter(Boolean);
+
+    if (!(await isAdmin(req)))
+      return new Response(JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     // GET - list all keys (masked)
     if (req.method === "GET") {
