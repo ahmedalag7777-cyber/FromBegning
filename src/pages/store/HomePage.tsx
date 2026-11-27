@@ -14,7 +14,7 @@ export function HomePage() {
     const load = async () => {
       const [prodRes, catRes] = await Promise.all([
         supabase.from('products').select('*, category:categories(*)').eq('is_active', true).order('created_at', { ascending: false }),
-        supabase.from('categories').order('sort_order'),
+        supabase.from('categories').select('*').order('sort_order'),
       ]);
       setProducts(prodRes.data || []);
       setCategories(catRes.data || []);

@@ -10,7 +10,7 @@ async function getExcelJS() {
   if (!ExcelJSModule) {
     ExcelJSModule = await import('exceljs');
   }
-  return ExcelJSModule.default || ExcelJSModule;
+  return ExcelJSModule;
 }
 
 async function downloadExcel(filename: string, sheets: { name: string; rows: ExportRow[] }[]) {
@@ -34,7 +34,7 @@ async function downloadExcel(filename: string, sheets: { name: string; rows: Exp
     }
 
     // Auto-fit columns
-    ws.columns.forEach((col, i) => {
+    ws.columns.forEach((col: { width?: number }, i: number) => {
       let maxLen = headers[i].length;
       for (const row of sheet.rows) {
         const val = String(Object.values(row)[i] || '');

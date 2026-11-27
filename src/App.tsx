@@ -37,7 +37,7 @@ function StoreShell({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    supabase.from('categories').order('sort_order').then(({ data }) => setCategories(data || []));
+    supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
   }, []);
 
   return (

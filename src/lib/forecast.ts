@@ -67,7 +67,7 @@ export function useForecast(
         product_name: product.name,
         current_stock: product.stock,
         avg_daily_sales: Math.round(avgDailySales * 10) / 10,
-        days_until_stockout,
+        days_until_stockout: daysUntilStockout,
         recommended_reorder_qty: recommendedReorderQty,
         trend,
         confidence,

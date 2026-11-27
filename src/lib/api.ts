@@ -4,84 +4,119 @@ import type {
   Account, StoreSettings, Category,
 } from '@/types';
 
-// Generic query helpers
 export const queries = {
-  products: () => supabase
-    .from('products')
-    .select('*, category:categories(*)')
-    .order('created_at', { ascending: false })
-    .then(r => r.data as Product[] || []),
+  products: async (): Promise<Product[]> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, category:categories(*)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Product[];
+  },
 
-  product: (slug: string) => supabase
-    .from('products')
-    .select('*, category:categories(*)')
-    .eq('slug', slug)
-    .maybeSingle()
-    .then(r => r.data as Product | null),
+  product: async (slug: string): Promise<Product | null> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, category:categories(*)')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (error) throw error;
+    return data as Product | null;
+  },
 
-  orders: () => supabase
-    .from('orders')
-    .select('*, customer:customers(*), order_items(*)')
-    .order('created_at', { ascending: false })
-    .then(r => r.data as Order[] || []),
+  orders: async (): Promise<Order[]> => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, customer:customers(*), order_items(*)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Order[];
+  },
 
-  customers: () => supabase
-    .from('customers')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .then(r => r.data as Customer[] || []),
+  customers: async (): Promise<Customer[]> => {
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Customer[];
+  },
 
-  invoices: () => supabase
-    .from('invoices')
-    .select('*, customer:customers(*), order:orders(*)')
-    .order('created_at', { ascending: false })
-    .then(r => r.data as Invoice[] || []),
+  invoices: async (): Promise<Invoice[]> => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*, customer:customers(*), order:orders(*)')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Invoice[];
+  },
 
-  accounts: () => supabase
-    .from('accounts')
-    .select('*')
-    .order('code')
-    .then(r => r.data as Account[] || []),
+  accounts: async (): Promise<Account[]> => {
+    const { data, error } = await supabase
+      .from('accounts')
+      .select('*')
+      .order('code');
+    if (error) throw error;
+    return (data || []) as Account[];
+  },
 
-  journal: () => supabase
-    .from('journal_entries')
-    .select('*, journal_lines(*, account:accounts(*))')
-    .order('entry_date', { ascending: false })
-    .then(r => r.data as JournalEntry[] || []),
+  journal: async (): Promise<JournalEntry[]> => {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*, journal_lines(*, account:accounts(*))')
+      .order('entry_date', { ascending: false });
+    if (error) throw error;
+    return (data || []) as JournalEntry[];
+  },
 
-  categories: () => supabase
-    .from('categories')
-    .order('sort_order')
-    .then(r => r.data as Category[] || []),
+  categories: async (): Promise<Category[]> => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order');
+    if (error) throw error;
+    return (data || []) as Category[];
+  },
 
-  settings: () => supabase
-    .from('store_settings')
-    .select('*')
-    .maybeSingle()
-    .then(r => r.data as StoreSettings | null),
+  settings: async (): Promise<StoreSettings | null> => {
+    const { data, error } = await supabase
+      .from('store_settings')
+      .select('*')
+      .maybeSingle();
+    if (error) throw error;
+    return data as StoreSettings | null;
+  },
 
-  lowStockProducts: () => supabase
-    .from('products')
-    .select('*')
-    .lt('stock', 5)
-    .order('stock', { ascending: true })
-    .then(r => r.data as Product[] || []),
+  lowStockProducts: async (): Promise<Product[]> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .lt('stock', 5)
+      .order('stock', { ascending: true });
+    if (error) throw error;
+    return (data || []) as Product[];
+  },
 
-  pendingOrders: () => supabase
-    .from('orders')
-    .select('*')
-    .eq('status', 'pending')
-    .then(r => r.data as Order[] || []),
+  pendingOrders: async (): Promise<Order[]> => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('status', 'pending');
+    if (error) throw error;
+    return (data || []) as Order[];
+  },
 
-  overdueInvoices: () => supabase
-    .from('invoices')
-    .select('*, customer:customers(*)')
-    .in('status', ['sent', 'overdue'])
-    .lt('due_date', new Date().toISOString().split('T')[0])
-    .then(r => r.data as Invoice[] || []),
+  overdueInvoices: async (): Promise<Invoice[]> => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*, customer:customers(*)')
+      .in('status', ['sent', 'overdue'])
+      .lt('due_date', new Date().toISOString().split('T')[0]);
+    if (error) throw error;
+    return (data || []) as Invoice[];
+  },
 };
 
-// Mutations
 export const mutations = {
   createProduct: async (data: Partial<Product>) => {
     const slug = (data.name || '').toLowerCase().replace(/\s+/g, '-') + '-' + Date.now().toString().slice(-4);

@@ -36,7 +36,7 @@ export function ShopPage() {
 
       const [prodRes, catRes] = await Promise.all([
         query.order('created_at', { ascending: false }),
-        supabase.from('categories').order('sort_order'),
+        supabase.from('categories').select('*').order('sort_order'),
       ]);
       setProducts(prodRes.data || []);
       setCategories(catRes.data || []);

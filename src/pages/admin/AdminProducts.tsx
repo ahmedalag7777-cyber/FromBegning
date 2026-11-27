@@ -22,7 +22,7 @@ export function AdminProducts() {
       .select('*, category:categories(*)')
       .order('created_at', { ascending: false });
     setProducts(data || []);
-    const { data: cats } = await supabase.from('categories').order('sort_order');
+    const { data: cats } = await supabase.from('categories').select('*').order('sort_order');
     setCategories(cats || []);
     setLoading(false);
   };
