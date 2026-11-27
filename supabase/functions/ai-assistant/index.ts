@@ -6,7 +6,8 @@ const corsHeaders = {
 
 const SYSTEM_PROMPT = `أنت مساعد ذكي متخصص في تحليل بيانات التجارة الإلكترونية والمحاسبة.
 تجيب باللغة العربية بشكل دقيق وموجز. تحلل الأرقام وتقدم توصيات عملية.
-عند إعطائك بيانات مبيعات أو محاسبية، تقدم رؤى قابلة للتنفيذ.`;
+عند إعطائك بيانات مبيعات أو محاسبية، تقدم رؤى قابلة للتنفيذ.
+الأرقام والعملات تُعرض بالريال السعودي.`;
 
 // Read keys from database via service role (bypasses RLS)
 async function getKeys(provider: string): Promise<{ key_value: string; label: string | null }[]> {
@@ -50,7 +51,7 @@ async function callGroq(prompt: string, system: string): Promise<string> {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${k.key_value}` },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "openai/gpt-oss-120b",
           messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
           temperature: 0.7, max_tokens: 1024,
         }),
@@ -71,7 +72,7 @@ async function callGemini(prompt: string, system: string): Promise<string> {
   for (const k of keys) {
     try {
       const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k.key_value}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${k.key_value}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -100,7 +101,7 @@ async function callOpenRouter(prompt: string, system: string): Promise<string> {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${k.key_value}` },
         body: JSON.stringify({
-          model: "meta-llama/llama-3.2-3b-instruct:free",
+          model: "meta-llama/llama-3.3-70b-instruct",
           messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
           temperature: 0.7, max_tokens: 1024,
         }),
